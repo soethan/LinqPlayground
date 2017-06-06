@@ -113,6 +113,32 @@ namespace LinqTest
             }
 
             #endregion
+
+            #region Composite Equals with 3 tables join
+
+            List<Product> products = MockData.GetProducts();
+            List<Order> orders = MockData.GetOrders();
+            List<OrderDetails> orderDetails = MockData.GetOrderDetails();
+
+            var compositeEqual = from p in products
+                                 from o in orders
+                                 join od in orderDetails
+                                 on new { ProductId = p.Id, OrderId = o.Id } equals new { ProductId = od.ProductId, OrderId = od.Id }
+                                 into details
+                                 from d in details
+                                 select new {
+                                     OrderId = o.Id,
+                                     ProductId = p.Id, 
+                                     Price = d.Price
+                                 };
+
+            Console.WriteLine("************** Composite Equals with 3 tables join **************");
+            foreach (var item in compositeEqual)
+            {
+                Console.WriteLine(item);
+            }
+
+            #endregion
             
             Console.Read();
         }
