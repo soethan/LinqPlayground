@@ -11,7 +11,7 @@ namespace LinqTest.Utils
     {
         public static void PrintQuery(this IEnumerable query, string title)
         {
-            Console.WriteLine($"************** {title} **************");
+            Console.WriteLine("************** " + title + " **************");
             foreach (var item in query)
             {
                 Console.WriteLine(item);

@@ -131,8 +131,49 @@ namespace LinqTest
             compositeEqual.PrintQuery("Composite Equals with 4 tables join");
 
             #endregion
-            
+
+            PrintFibonanci(4);
+            Console.WriteLine("\n-------------");
+            ReverseString("abcde");
+
+            int a = 100, b = 200;
+            Console.WriteLine(string.Format("\nBefore Swapping::a={0};b={1};", a, b));
+            SwapWithoutTemp(ref a, ref b);
+            Console.WriteLine(string.Format("\nAfter Swapping::a={0};b={1};", a, b));
+
             Console.Read();
+        }
+
+        private static void PrintFibonanci(int totalNumbers)
+        {
+            int first = 0, second = 1;
+            if (totalNumbers == 0) return;
+            
+            for (int i = 0; i < totalNumbers; i++)
+            {
+                if (i == 0) { Console.Write(string.Format("{0} ", first)); continue; }
+                if (i == 1) { Console.Write(string.Format("{0} ", second)); continue; }
+
+                int sum = first + second; 
+                first = second;
+                second = sum;
+                Console.Write(string.Format("{0} ", sum));
+            }
+        }
+
+        private static void ReverseString(string str)
+        {
+            for (int i = str.Length - 1; i >= 0; i--)
+            {
+                Console.Write(str[i]);
+            }
+        }
+
+        private static void SwapWithoutTemp(ref int a, ref int b)
+        {
+            a = a + b;
+            b = a - b;
+            a = a - b;
         }
     }
 }
