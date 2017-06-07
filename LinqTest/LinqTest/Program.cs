@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using LinqTest.Utils;
 
 namespace LinqTest
 {
@@ -14,33 +13,39 @@ namespace LinqTest
     {
         static void Main(string[] args)
         {
+            #region init MockData
+
             List<Company> companyList = MockData.GetCompanies();
             List<Employee> employeeList = MockData.GetEmployees();
 
+            List<Customer> customers = MockData.GetCustomers();
+            List<Product> products = MockData.GetProducts();
+            List<Order> orders = MockData.GetOrders();
+            List<OrderDetails> orderDetails = MockData.GetOrderDetails();
+
+            #endregion
+            
             #region Left Outer Join
 
             var leftOuterJoinQuery = employeeList
                                         .GroupJoin(
                                             companyList,
-                                            emp => emp.CompanyId,
-                                            company => company.CompanyId,
+                                            e => e.CompanyId,
+                                            c => c.CompanyId,
                                             (emp, cmps) => new { Employee = emp, Companies = cmps }
-                                        ).SelectMany(
-                                            empComps => empComps.Companies.DefaultIfEmpty(),
+                                        )
+                                        .SelectMany(
+                                            empComps => empComps.Companies.DefaultIfEmpty(new Company { CompanyId = 0, CompanyName = string.Empty }),
                                             (empCompsR, cmpR) => new
                                             {
                                                 EmployeeId = empCompsR.Employee.EmployeeId,
                                                 EmployeeName = empCompsR.Employee.EmployeeName,
-                                                CompanyId = cmpR == null ? string.Empty : cmpR.CompanyId.ToString(),
-                                                CompanyName = cmpR == null ? string.Empty : cmpR.CompanyName
+                                                CompanyId = cmpR.CompanyId,
+                                                CompanyName = cmpR.CompanyName
                                             }
                                         );
 
-            Console.WriteLine("************** Left Outer Join **************");
-            foreach (var item in leftOuterJoinQuery)
-            {
-                Console.WriteLine(item);
-            }
+            leftOuterJoinQuery.PrintQuery("Left Outer Join");
 
             #endregion
 
@@ -63,20 +68,15 @@ namespace LinqTest
                                             }
                                         );
 
-            Console.WriteLine("************** Right Outer Join **************");
-            foreach (var item in rightOuterJoinQuery)
-            {
-                Console.WriteLine(item);
-            }
+            rightOuterJoinQuery.PrintQuery("Right Outer Join");
 
             #endregion
 
             #region GroupBy and GroupBy...Having
 
-            Console.WriteLine("************** GroupBy and GroupBy...Having **************");
             var employeesCountByCompany = rightOuterJoinQuery
                                                 .GroupBy(e => e.CompanyId)
-                //.Where(empGroup => empGroup.Count() > 1)
+                                                //.Where(empGroup => empGroup.Count() > 1)    //it is GroupBy Having
                                                 .Select(g =>
                                                     new
                                                     {
@@ -85,10 +85,7 @@ namespace LinqTest
                                                     }
                                                 );
 
-            foreach (var item in employeesCountByCompany)
-            {
-                Console.WriteLine(string.Format("CompanyId:{0};TotalEmployees={1};", item.CompanyId, item.TotalEmployees));
-            }
+            employeesCountByCompany.PrintQuery("GroupBy and GroupBy...Having");
 
             #endregion
 
@@ -98,29 +95,21 @@ namespace LinqTest
                           join c in companyList
                           on e.CompanyId equals c.CompanyId
                           into cmpGroup
+                          from cg in cmpGroup.DefaultIfEmpty(new Company { CompanyId = 0, CompanyName = string.Empty })
                           select new
                           {
                               e.EmployeeId,
                               e.EmployeeName,
-                              //cmpGroup,
-                              CompanyId = cmpGroup.Any() ? cmpGroup.FirstOrDefault().CompanyId.Value.ToString() : "",
-                              CompanyName = cmpGroup.Any() ? cmpGroup.FirstOrDefault().CompanyName : ""
+                              cg.CompanyId,
+                              cg.CompanyName
                           };
 
-            foreach (var item in grpJoin)
-            {
-                Console.WriteLine(string.Format("EmployeeId:{0};EmployeeName={1};CompanyId={2};CompanyName={3};", item.EmployeeId, item.EmployeeName, item.CompanyId, item.CompanyName));//item.cmpGroup
-            }
+            grpJoin.PrintQuery("Left Outer Join another example");
 
             #endregion
 
-            #region Composite Equals with 3 tables join
-
-            List<Customer> customers = MockData.GetCustomers();
-            List<Product> products = MockData.GetProducts();
-            List<Order> orders = MockData.GetOrders();
-            List<OrderDetails> orderDetails = MockData.GetOrderDetails();
-
+            #region Composite Equals with 4 tables join
+            
             var compositeEqual = from c in customers
                                  join o in orders
                                  on c.Id equals o.CustomerId
@@ -135,14 +124,11 @@ namespace LinqTest
                                      CustomerId = c.Id,
                                      OrderId = o.Id,
                                      ProductId = p.Id,
-                                     Price = d.Price
+                                     Price = d.Price,
+                                     DeliveryAddress = o.DeliveryAddress
                                  };
 
-            Console.WriteLine("************** Composite Equals with 3 tables join **************");
-            foreach (var item in compositeEqual)
-            {
-                Console.WriteLine(item);
-            }
+            compositeEqual.PrintQuery("Composite Equals with 4 tables join");
 
             #endregion
             
